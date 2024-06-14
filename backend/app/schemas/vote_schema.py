@@ -7,7 +7,7 @@ from datetime import datetime, UTC
 
 
 class VoteCreate(BaseModel):
-    pass
+    transaction_id_algorand: str
 
 
 class VoteUpdate(BaseModel):
@@ -20,4 +20,5 @@ class VoteOut(BaseModel):
     candidate: str
     election: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    transaction_id_algorand: str
 

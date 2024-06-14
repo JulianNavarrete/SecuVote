@@ -1,4 +1,3 @@
-
 from app.schemas.vote_schema import VoteOut
 from app.models.candidate_model import CandidateModel
 from app.models.election_model import ElectionModel
@@ -15,6 +14,8 @@ from pymongo.errors import DuplicateKeyError
 from beanie import Link
 import json
 from datetime import datetime as dt, UTC
+from app.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, algod_client
+from algosdk.error import AlgodHTTPError
 
 
 class VoteService:
@@ -38,9 +39,22 @@ class VoteService:
                 dni=user.dni,
                 email=user.email,
                 first_name=user.first_name,
-                last_name=user.last_name
+                last_name=user.last_name,
+                algorand_address=user.algorand_address,
+                algorand_mnemonic=user.algorand_mnemonic,
+                algorand_private_key=user.algorand_private_key
             )
             
+            '''
+            print(user.id)
+            print(user.dni)
+            print(user.email)
+            print(user.first_name)
+            print(user.last_name)
+            print(user.algorand_address)
+            print(user.algorand_mnemonic)
+            '''
+
             object_id = ObjectId(election_id)            
             election = await ElectionModel.find_one(ElectionModel.id == object_id)
             if not election:
@@ -63,23 +77,43 @@ class VoteService:
                 party=candidate.party,
             )
 
+
+            try:
+                # transaction_id_algorand = ""
+                # sender = str(dni)
+                sender_mnemonic = user.algorand_mnemonic
+                algo_txn = create_algorand_txn(user.algorand_address, 'QRFW3WKHHOVO6I2VJXMJKQXQTHBXLION3EKAGQF4CWKUKDF4CZMVDLMG5Q') # Goes to a government account
+                # print(algo_txn)
+                signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
+            except AlgodHTTPError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"AlgodHTTPError: {str(e)}"
+    )
+
+
+            txid = send_algorand_txn(signed_txn)
+
             # Create vote
             vote = VoteModel(
                 voter=user.model_dump(),
                 candidate=candidate.model_dump(),
                 election=election.model_dump(),
-                timestamp=dt.now(UTC)
+                timestamp=dt.now(UTC),
+                transaction_id_algorand=txid
             )
 
             # Save vote to database
             await vote.save()
+
 
             vote_out = VoteOut(
                 id=str(vote.id),
                 voter=str(vote.voter["id"]), 
                 candidate=str(vote.candidate["id"]), 
                 election=str(vote.election["id"]), 
-                timestamp=vote.timestamp
+                timestamp=vote.timestamp,
+                transaction_id_algorand=txid
             )
             return vote_out
 
@@ -111,7 +145,8 @@ class VoteService:
                 voter=str(vote.voter["dni"]), 
                 candidate=str(vote.candidate["name"]), 
                 election=str(vote.election["name"]), 
-                timestamp=vote.timestamp
+                timestamp=vote.timestamp,
+                transaction_id_algorand=vote.transaction_id_algorand
             )
             return vote_out
 
@@ -136,7 +171,8 @@ class VoteService:
                     voter=str(vote.voter["id"]), 
                     candidate=str(vote.candidate["id"]), 
                     election=str(vote.election["id"]), 
-                    timestamp=vote.timestamp
+                    timestamp=vote.timestamp,
+                    transaction_id_algorand=vote.transaction_id_algorand
                 )
                 for vote in votes
             ]

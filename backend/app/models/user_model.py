@@ -18,10 +18,14 @@ class UserModel(Document):
     dni: Indexed(int, unique=True) # type: ignore
     email: EmailStr # type: ignore
     hashed_password: str
+    algorand_address: Optional[str] = None
+    algorand_mnemonic: Optional[str] = None
+    algorand_private_key: Optional[str] = None
     last_name: Optional[str] = None
     first_name: Optional[str] = None
     role: Optional[UserRole] = None
     disabled : Optional[bool] = None
+
 
 
     def __repr__(self) -> str:

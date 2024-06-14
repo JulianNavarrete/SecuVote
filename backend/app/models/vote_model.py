@@ -13,6 +13,7 @@ class VoteModel(Document):
     candidate: Optional[dict] # Reference to the ID of the candidate being voted for
     election: Optional[dict] # Reference to the ID of the election
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    transaction_id_algorand: Optional[str] = None
 
 
     class Settings:
