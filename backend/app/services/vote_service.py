@@ -96,17 +96,54 @@ class VoteService:
 
 
     @staticmethod
-    async def get_vote_by_id(id: str) -> Optional[VoteOut]:
-        object_id = ObjectId(id)
-        vote = await VoteModel.find_one(VoteModel.id == object_id)
-        if not vote:
-            return None
+    async def get_vote_by_id(id: str) -> Optional[VoteModel]:
+        try:
+            object_id = ObjectId(id)
+            vote = await VoteModel.find_one(VoteModel.id == object_id)
+            if not vote:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Vote not found"
+                )
 
-        return VoteOut(
-            id=str(vote.id),
-            voter=str(vote.voter.id), 
-            candidate=str(vote.candidate.id), 
-            election=str(vote.election.id), 
-            timestamp=vote.timestamp
-        )
+            vote_out = VoteOut(
+                id=str(vote.id),
+                voter=str(vote.voter["dni"]), 
+                candidate=str(vote.candidate["name"]), 
+                election=str(vote.election["name"]), 
+                timestamp=vote.timestamp
+            )
+            return vote_out
+
+        except HTTPException as http_exc:
+            # Re-raise HTTPException to avoid capturing it as a 500 error
+            raise http_exc
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e)
+            )
+
+
+    @staticmethod
+    async def get_votes() -> list[VoteOut]:
+        try:
+            votes = await VoteModel.all().to_list()
+            return [
+                VoteOut(
+                    id=str(vote.id),
+                    voter=str(vote.voter["id"]), 
+                    candidate=str(vote.candidate["id"]), 
+                    election=str(vote.election["id"]), 
+                    timestamp=vote.timestamp
+                )
+                for vote in votes
+            ]
+        
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e)
+            )
 

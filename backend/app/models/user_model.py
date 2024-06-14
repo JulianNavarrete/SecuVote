@@ -16,7 +16,7 @@ class UserRole(Enum):
 class UserModel(Document):
     user_id: UUID = Field(default_factory=uuid4)
     dni: Indexed(int, unique=True) # type: ignore
-    email: Indexed(EmailStr, unique=True) # type: ignore
+    email: EmailStr # type: ignore
     hashed_password: str
     last_name: Optional[str] = None
     first_name: Optional[str] = None

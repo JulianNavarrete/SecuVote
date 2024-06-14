@@ -31,6 +31,21 @@ async def get_vote(id: str):
     return vote
 
 
+@vote_router.get("/", summary="Show all votes", response_model=list[VoteOut])
+async def get_votes():
+    try:
+        return await VoteService.get_votes()
+    except errors.OperationFailure:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No votes found"
+        )
+        
+
+
+
+
+'''
 @vote_router.delete("/delete-vote/{id}", summary="Delete Vote")
 async def delete_vote(id: str):
     try:
@@ -43,8 +58,6 @@ async def delete_vote(id: str):
         )
 
 
-
-'''
 @vote_router.post("/update-vote/{id}", summary="Update Candidate", response_model=CandidateOut)
 async def update_candidate(id: str, data: CandidateUpdate):
     try:
@@ -55,7 +68,6 @@ async def update_candidate(id: str, data: CandidateUpdate):
             detail="Candidate does not exist"
         )
     
-
 
 @candidate_router.post("/add-election-to-candidate/{candidate_id}/{election_id}", summary="Add Election to Candidate", response_model=CandidateOut)
 async def add_election_to_candidate(candidate_id: str, election_id: str):
@@ -88,3 +100,4 @@ async def remove_election_from_candidate(candidate_id: str, election_id: str):
             detail="An error occurred while removing the election from the candidate"
         )
 '''
+

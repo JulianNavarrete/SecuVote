@@ -20,6 +20,7 @@ class UserService:
                     detail="User already registered"
                 )
 
+            # user.dni = str(user.dni)
             user_in = UserModel(
                 dni=user.dni,
                 email=user.email,
