@@ -22,7 +22,6 @@ class UserService:
                 )
 
 
-            # user.dni = str(user.dni)
             user_in = UserModel(
                 dni=user.dni,
                 email=user.email,
@@ -33,17 +32,15 @@ class UserService:
             )
 
 
-            # Generar una dirección, mnemonic key y private key de Algorand para el nuevo usuario
+            # Generate an address, mnemonic key and private key for the new user
             new_address = account.generate_account()
             user_in.algorand_private_key = new_address[0]
             user_in.algorand_address = new_address[1]
             user_in.algorand_mnemonic = mnemonic.from_private_key(new_address[0])
 
             await user_in.save()
-            # user_in.create(user_in)
             
             return user_in
-            # return jsonify({'message': 'Usuario creado correctamente.'}), 201
 
 
         except HTTPException as http_exc:

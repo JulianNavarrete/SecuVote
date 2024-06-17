@@ -45,7 +45,6 @@ class VoteService:
                 algorand_private_key=user.algorand_private_key
             )
             
-
             object_id = ObjectId(election_id)            
             election = await ElectionModel.find_one(ElectionModel.id == object_id)
             if not election:
@@ -71,14 +70,14 @@ class VoteService:
 
             try:
                 sender_mnemonic = user.algorand_mnemonic
-                algo_txn = create_algorand_txn(user.algorand_address, 'QRFW3WKHHOVO6I2VJXMJKQXQTHBXLION3EKAGQF4CWKUKDF4CZMVDLMG5Q') # Goes to a government account
+                # Goes to a government account
+                algo_txn = create_algorand_txn(user.algorand_address, 'QRFW3WKHHOVO6I2VJXMJKQXQTHBXLION3EKAGQF4CWKUKDF4CZMVDLMG5Q')
                 signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
             except AlgodHTTPError as e:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail=f"AlgodHTTPError: {str(e)}"
-    )
-
+            )
 
             txid = send_algorand_txn(signed_txn)
 
@@ -93,7 +92,6 @@ class VoteService:
 
             # Save vote to database
             await vote.save()
-
 
             vote_out = VoteOut(
                 id=str(vote.id),

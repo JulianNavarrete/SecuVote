@@ -8,7 +8,6 @@ from app.models.election_model import ElectionModel
 
 
 class VoteModel(Document):
-    # voter: Optional[Link[UserModel]] # Reference to the ID of the user who voted
     voter: Optional[dict]
     candidate: Optional[dict] # Reference to the ID of the candidate being voted for
     election: Optional[dict] # Reference to the ID of the election
