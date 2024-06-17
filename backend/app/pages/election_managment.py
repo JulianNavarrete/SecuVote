@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 from typing import Optional
-# from app.models.election_model import ElectionModel
+
 
 # Base URL of the FastAPI backend
 BASE_URL = "http://localhost:8000/api/v1"
