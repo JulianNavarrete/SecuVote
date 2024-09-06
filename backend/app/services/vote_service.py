@@ -65,13 +65,21 @@ class VoteService:
                 id=candidate_id,
                 name=candidate.name,
                 party=candidate.party,
+                algorand_address=candidate.algorand_address,
+                algorand_mnemonic=candidate.algorand_mnemonic,
+                algorand_private_key=candidate.algorand_private_key
             )
 
 
             try:
                 sender_mnemonic = user.algorand_mnemonic
+                
                 # Goes to a government account
-                algo_txn = create_algorand_txn(user.algorand_address, 'QRFW3WKHHOVO6I2VJXMJKQXQTHBXLION3EKAGQF4CWKUKDF4CZMVDLMG5Q')
+                # algo_txn = create_algorand_txn(user.algorand_address, 'QRFW3WKHHOVO6I2VJXMJKQXQTHBXLION3EKAGQF4CWKUKDF4CZMVDLMG5Q')
+                
+                # Goes to candidate account (still testing)
+                algo_txn = create_algorand_txn(user.algorand_address, candidate.algorand_address)
+                
                 signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
             except AlgodHTTPError as e:
                 raise HTTPException(

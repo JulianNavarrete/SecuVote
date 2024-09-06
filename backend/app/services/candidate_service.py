@@ -8,6 +8,7 @@ from bson import ObjectId
 from pymongo.errors import DuplicateKeyError
 from beanie import Link
 import json
+from algosdk import account, mnemonic
 
 
 class CandidateService:
@@ -17,7 +18,18 @@ class CandidateService:
             name=data.name,
             party=data.party,
             bio=data.bio,
+            algorand_address=None,
+            algorand_mnemonic=None,
+            algorand_private_key=None
         )
+
+        # Generate an address, mnemonic key and private key for the new candidate
+        new_address = account.generate_account()
+        candidate.algorand_private_key = new_address[0]
+        candidate.algorand_address = new_address[1]
+        candidate.algorand_mnemonic = mnemonic.from_private_key(new_address[0])
+
+
         try:
             await candidate.insert()
             candidate_out = CandidateOut(
@@ -25,8 +37,12 @@ class CandidateService:
                 name=candidate.name,
                 party=candidate.party,
                 bio=candidate.bio,
+                algorand_address=candidate.algorand_address,
+                algorand_mnemonic=candidate.algorand_mnemonic,
+                algorand_private_key=candidate.algorand_private_key
             )
             return candidate_out
+        
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
