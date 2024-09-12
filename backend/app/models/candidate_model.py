@@ -6,6 +6,9 @@ class CandidateModel(Document):
     name: str
     party: str
     bio: Optional[str] = None
+    algorand_address: Optional[str] = None
+    algorand_mnemonic: Optional[str] = None
+    algorand_private_key: Optional[str] = None
     elections: Optional[List[Link["ElectionModel"]]] = None # Reference to the ID of the election
 
     def __repr__(self) -> str:

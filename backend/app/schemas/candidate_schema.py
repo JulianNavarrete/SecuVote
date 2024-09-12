@@ -21,10 +21,17 @@ class CandidateUpdate(BaseModel):
     name: Optional[str] = None
     party: Optional[str] = None
     bio: Optional[str] = None
+    algorand_address: Optional[str]
+    algorand_mnemonic: Optional[str]
+    # algorand_private_key: Optional[str]
+
 
 
 class CandidateOutVote(BaseModel):
     id: str
     name: str
     party: str
+    algorand_address: Optional[str]
+    algorand_mnemonic: Optional[str]
+    # algorand_private_key: Optional[str]
 
