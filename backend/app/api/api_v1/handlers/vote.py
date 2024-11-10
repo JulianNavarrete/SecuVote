@@ -4,15 +4,21 @@ from app.services.vote_service import VoteService
 from app.models.vote_model import VoteModel
 from pymongo import errors
 from uuid import UUID
+from app.models.user_model import UserModel
+from app.api.deps.user_deps import get_current_user
 
 
 vote_router = APIRouter()
 
 
 @vote_router.post("/create-vote", summary="Create a new vote", response_model=VoteOut)
-async def create_vote(dni: int, candidate_id: str, election_id: str):
+async def create_vote(
+    candidate_id: str,
+    election_id: str,
+    current_user: UserModel = Depends(get_current_user)
+):
     try:
-        return await VoteService.create_vote(dni, candidate_id, election_id)
+        return await VoteService.create_vote(current_user.dni, candidate_id, election_id)
     except errors.DuplicateKeyError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
