@@ -1,2 +1,2 @@
 source .venv/bin/activate
-flet run -r main.py
+flet run -r src/main.py
