@@ -21,4 +21,23 @@ async def login(dni: int, password: str) -> Optional[dict]:
     except Exception as e:
         print(f"Error en login: {e}")
         return None
-    
+
+
+async def register(email: str, dni: int, password: str) -> Optional[dict]:
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{BASE_URL}/user/create",
+                json={
+                    "email": email,
+                    "dni": dni,
+                    "password": password
+                }
+            )
+            if response.status_code == 200:
+                return response.json()
+            return None
+    except Exception as e:
+        print(f"Error en registro: {e}")
+        return None
+

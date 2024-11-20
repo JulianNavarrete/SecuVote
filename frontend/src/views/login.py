@@ -31,7 +31,7 @@ class LoginView(ft.View):
 
         self.register_button = ft.TextButton(
             text="¿No tienes cuenta? Regístrate",
-            # on_click=lambda _: self.page.go("/register")
+            on_click=lambda _: self.page.go("/register")
         )
 
         self.controls = [
@@ -70,7 +70,7 @@ class LoginView(ft.View):
                 # Save the token in the local storage
                 self.page.client_storage.set("access_token", result["access_token"])
                 self.page.client_storage.set("refresh_token", result["refresh_token"])
-                # self.page.go("/home")
+                self.page.go("/home")
             else:
                 self.page.show_snack_bar(
                     ft.SnackBar(content=ft.Text("DNI o contraseña incorrectos"))

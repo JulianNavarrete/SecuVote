@@ -1,6 +1,6 @@
 import flet as ft
 from views.login import LoginView
-# from views.register import RegisterView
+from views.register import RegisterView
 # from views.home import HomeView
 # from views.vote import VoteView
 
@@ -19,8 +19,8 @@ def main(page: ft.Page):
         
         if page.route == "/login":
             page.views.append(LoginView(page))
-    #     elif page.route == "/register":
-    #         page.views.append(RegisterView(page))
+        elif page.route == "/register":
+            page.views.append(RegisterView(page))
     #     elif page.route == "/home":
     #         page.views.append(HomeView(page))
     #     elif page.route == "/vote":
