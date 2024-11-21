@@ -60,21 +60,22 @@ class LoginView(ft.View):
 
             if not dni or not password:
                 self.page.show_snack_bar(
-                    ft.SnackBar(content=ft.Text("Por favor complete todos los campos"))
+                    ft.SnackBar(content=ft.Text("Por favor completa todos los campos"))
                 )
                 return
 
             result = await login(dni, password)
             
             if result:
-                # Save the token in the local storage
-                self.page.client_storage.set("access_token", result["access_token"])
-                self.page.client_storage.set("refresh_token", result["refresh_token"])
+                # En lugar de usar client_storage, guardamos el token en una variable global de la página
+                self.page.session.set("access_token", result["access_token"])
+                self.page.session.set("refresh_token", result["refresh_token"])
                 self.page.go("/home")
             else:
                 self.page.show_snack_bar(
                     ft.SnackBar(content=ft.Text("DNI o contraseña incorrectos"))
                 )
+                # print("Error en el login: ", result)
 
         except ValueError:
             self.page.show_snack_bar(
