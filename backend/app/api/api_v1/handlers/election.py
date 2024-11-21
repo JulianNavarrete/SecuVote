@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
+from app.schemas.candidate_schema import CandidateOut
 from app.schemas.election_schema import ElectionCreate, ElectionOut, ElectionUpdate
 from app.services.election_service import ElectionService
 from app.models.election_model import ElectionModel
@@ -86,6 +87,19 @@ async def get_all_elections():
     try:
         elections = await ElectionService.get_all_elections()
         return elections
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
+@election_router.get("/{election_id}/candidates", summary="Get all candidates in an election", response_model=list[CandidateOut])
+async def get_election_candidates(election_id: str):
+    try:
+        return await ElectionService.get_election_candidates(election_id)
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

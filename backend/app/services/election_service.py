@@ -1,3 +1,4 @@
+from app.schemas.candidate_schema import CandidateOut
 from app.schemas.election_schema import ElectionCreate, ElectionUpdate, ElectionOut
 from app.models.election_model import ElectionModel
 from app.models.candidate_model import CandidateModel
@@ -185,4 +186,42 @@ class ElectionService:
             ) 
             for election in elections
         ]
+
+    @staticmethod
+    async def get_election_candidates(election_id: str) -> list[CandidateOut]:
+        try:
+            object_id = ObjectId(election_id)
+            election = await ElectionModel.find_one(ElectionModel.id == object_id)
+            
+            if not election:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Election not found"
+                )
+
+            if not election.candidates:
+                return []
+
+            candidates_list = []
+            for candidate_link in election.candidates:
+                candidate = await CandidateModel.find_one(CandidateModel.id == candidate_link.ref.id)
+                if candidate:
+                    candidates_list.append(
+                        CandidateOut(
+                            id=str(candidate.id),
+                            name=candidate.name,
+                            party=candidate.party,
+                            bio=candidate.bio
+                        )
+                    )
+
+            return candidates_list
+
+        except HTTPException as http_exc:
+            raise http_exc
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=str(e)
+            )
 
