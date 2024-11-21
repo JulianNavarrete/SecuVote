@@ -169,3 +169,20 @@ class ElectionService:
                 detail=str(e)
             )
         
+
+    @staticmethod
+    async def get_all_elections():
+        elections = await ElectionModel.find_all().to_list()
+        # Convertir los elections a ElectionOut explícitamente
+        return [
+            ElectionOut(
+                id=str(election.id),  # Convertir ObjectId a string
+                name=election.name,
+                description=election.description,
+                start_date=election.start_date,
+                end_date=election.end_date,
+                candidates=election.candidates if hasattr(election, 'candidates') else []
+            ) 
+            for election in elections
+        ]
+

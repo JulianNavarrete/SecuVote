@@ -80,3 +80,15 @@ async def remove_candidate_from_election(election_id: str, candidate_id: str):
             detail=str(e)
         )
 
+
+@election_router.get("/elections", summary="Get all elections", response_model=list[ElectionOut])
+async def get_all_elections():
+    try:
+        elections = await ElectionService.get_all_elections()
+        return elections
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+

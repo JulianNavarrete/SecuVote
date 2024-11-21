@@ -7,7 +7,10 @@ class HomeView(ft.View):
         super().__init__()
         self.page = page
         self.initialize_view()
-
+        self.page.add(ft.ProgressRing())
+        self.page.update()
+        self.page.on_view_pop = self.load_initial_data
+    
     def initialize_view(self):
         self.app_bar = ft.AppBar(
             title=ft.Text("SecuVote"),
@@ -44,17 +47,20 @@ class HomeView(ft.View):
             self.elections_list,
             self.refresh_button
         ]
+    
+    async def load_initial_data(self):
+        await self.load_elections(None)
 
-        # Load elections on startup
-        self.page.add(ft.ProgressRing())
-        self.load_elections(None)
+    async def load_elections(self, _):
+        # print("Loading elections...")
+        access_token = self.page.session.get("access_token")
+        self.elections = await get_elections(access_token)
+        # print(f"Elections: {self.elections}")
 
-    async def load_elections(self, e):
         self.elections_list.controls.clear()
-        elections = await get_elections()
-        
-        if elections:
-            for election in elections:
+
+        if self.elections:
+            for election in self.elections:
                 self.elections_list.controls.append(
                     ft.Card(
                         content=ft.Container(

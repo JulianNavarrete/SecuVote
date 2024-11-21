@@ -42,19 +42,19 @@ async def register(email: str, dni: int, password: str) -> Optional[dict]:
         return None
 
 
-async def get_elections() -> Optional[list]:
+async def get_elections(access_token: str) -> Optional[list]:
     try:
         async with httpx.AsyncClient() as client:
-            token = page.session.get("access_token")
             response = await client.get(
-                f"{BASE_URL}/election/",
-                headers={"Authorization": f"Bearer {token}"}
+                f"{BASE_URL}/election/elections",
+                headers={"Authorization": f"Bearer {access_token}"}
             )
             if response.status_code == 200:
                 return response.json()
+            print(f"Error status code: {response.status_code}")
             return None
     except Exception as e:
-        print(f"Error obteniendo elecciones: {e}")
+        print(f"Error obteniendo elecciones: {str(e)}")
         return None
 
 
