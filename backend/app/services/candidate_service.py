@@ -14,6 +14,13 @@ from algosdk import account, mnemonic
 class CandidateService:
     @staticmethod
     async def create_candidate(data: CandidateCreate) -> CandidateModel:
+        existing_candidate = await CandidateModel.find_one(CandidateModel.name == data.name)
+        if existing_candidate:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Ya existe un candidato con el nombre '{data.name}'"
+            )
+
         candidate = CandidateModel(
             name=data.name,
             party=data.party,
@@ -66,6 +73,20 @@ class CandidateService:
         if not candidate:
             return None
 
+        return CandidateOut(
+            id=str(candidate.id),
+            name=candidate.name,
+            party=candidate.party,
+            bio=candidate.bio,
+            election_id=candidate.elections
+        )
+
+
+    @staticmethod
+    async def get_candidate_by_name(name: str) -> Optional[CandidateOut]:
+        candidate = await CandidateModel.find_one(CandidateModel.name == name)
+        if not candidate:
+            return None
         return CandidateOut(
             id=str(candidate.id),
             name=candidate.name,

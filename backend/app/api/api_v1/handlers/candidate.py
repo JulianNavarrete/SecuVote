@@ -4,6 +4,7 @@ from app.services.candidate_service import CandidateService
 from app.models.candidate_model import CandidateModel
 from pymongo import errors
 from uuid import UUID
+from typing import Optional
 
 
 candidate_router = APIRouter()
@@ -20,9 +21,25 @@ async def create_candidate(data: CandidateCreate):
         )
 
 
-@candidate_router.get("/candidate/{id}", summary="Get candidate details", response_model=CandidateOut)
-async def get_candidate(id: str):
-    candidate = await CandidateService.get_candidate_by_id(id)
+@candidate_router.get("/candidate", summary="Get candidate details by id or name", response_model=CandidateOut)
+async def get_candidate(id: Optional[str] = None, name: Optional[str] = None):
+    if id and name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Proporciona solo 'id' o 'name', no ambos"
+        )
+    
+    if not id and not name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Debes proporcionar 'id' o 'name'"
+        )
+    
+    if id:
+        candidate = await CandidateService.get_candidate_by_id(id)
+    else:
+        candidate = await CandidateService.get_candidate_by_name(name)
+    
     if not candidate:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
