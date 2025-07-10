@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from typing import Optional
 from uuid import UUID
 from bson import ObjectId
+from bson.errors import InvalidId
 from pymongo.errors import DuplicateKeyError
 from beanie import Link
 import json
@@ -68,18 +69,21 @@ class CandidateService:
 
     @staticmethod
     async def get_candidate_by_id(id: str) -> Optional[CandidateOut]:
-        object_id = ObjectId(id)
-        candidate = await CandidateModel.find_one(CandidateModel.id == object_id)
-        if not candidate:
-            return None
+        try:
+            object_id = ObjectId(id)
+            candidate = await CandidateModel.find_one(CandidateModel.id == object_id)
+            if not candidate:
+                return None
 
-        return CandidateOut(
-            id=str(candidate.id),
-            name=candidate.name,
-            party=candidate.party,
-            bio=candidate.bio,
-            election_id=candidate.elections
-        )
+            return CandidateOut(
+                id=str(candidate.id),
+                name=candidate.name,
+                party=candidate.party,
+                bio=candidate.bio,
+                election_id=candidate.elections
+            )
+        except InvalidId:
+            return None
 
 
     @staticmethod
@@ -98,35 +102,47 @@ class CandidateService:
 
     @staticmethod
     async def update_candidate(id: str, data: CandidateUpdate) -> CandidateOut:
-        object_id = ObjectId(id)
-        candidate = await CandidateModel.find_one(CandidateModel.id == object_id)
-        if not candidate:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Candidate not found"
+        try:
+            object_id = ObjectId(id)
+            candidate = await CandidateModel.find_one(CandidateModel.id == object_id)
+            if not candidate:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Candidate not found"
+                )
+
+            update_data = data.model_dump(exclude_unset=True)
+            for key, value in update_data.items():
+                setattr(candidate, key, value)
+            await candidate.save()
+
+            return CandidateOut(
+                id=str(candidate.id),
+                name=candidate.name,
+                party=candidate.party,
+                bio=candidate.bio,
+                election_id=candidate.elections
             )
-
-        update_data = data.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(candidate, key, value)
-        await candidate.save()
-
-        return CandidateOut(
-            id=str(candidate.id),
-            name=candidate.name,
-            party=candidate.party,
-            bio=candidate.bio,
-            election_id=candidate.elections
-        )
+        except InvalidId:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="ID de candidato inválido"
+            )
 
 
     @staticmethod
     async def delete_candidate(id: str) -> None:
-        object_id = ObjectId(id)
-        candidate = await CandidateModel.find_one(CandidateModel.id == object_id)
-        if not candidate:
-            raise HTTPException(status_code=404, detail="Candidate not found")
-        await candidate.delete()
+        try:
+            object_id = ObjectId(id)
+            candidate = await CandidateModel.find_one(CandidateModel.id == object_id)
+            if not candidate:
+                raise HTTPException(status_code=404, detail="Candidate not found")
+            await candidate.delete()
+        except InvalidId:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="ID de candidato inválido"
+            )
 
 
     @staticmethod
@@ -155,6 +171,7 @@ class CandidateService:
             await candidate.save()
             candidate.id = str(candidate.id)
             return candidate
+
 
         except HTTPException as http_exc:
             # Re-raise HTTPException to avoid capturing it as a 500 error
