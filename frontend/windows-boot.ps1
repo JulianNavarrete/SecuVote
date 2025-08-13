@@ -1,2 +1,2 @@
-.venv\Scripts\Activate.ps1
-# flet run -r src/main.py
+# .venv\Scripts\Activate.ps1
+flet run --web main.py
