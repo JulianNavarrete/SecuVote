@@ -44,10 +44,21 @@ def _vote_card(page: ft.Page, state: AppState, api: ApiClient, candidate: dict) 
     def on_vote(_: ft.ControlEvent) -> None:
         ok, msg = api.vote(state.access_token or "", candidate.get("id", ""), state.current_election.get("id", ""))  # type: ignore[arg-type]
         if ok:
-            page.show_snack_bar(ft.SnackBar(content=ft.Text("¡Voto registrado!"), action="OK"))
+            page.snack_bar = ft.SnackBar(content=ft.Text("¡Voto registrado!"), action="OK")
+            page.snack_bar.open = True
+            page.update()
             page.go("/election")
         else:
-            page.show_snack_bar(ft.SnackBar(content=ft.Text(str(msg)), action="OK"))
+            message = str(msg)
+            if "already voted" in message.lower():
+                page.snack_bar = ft.SnackBar(content=ft.Text("Ya has votado en esta elección"), action="OK")
+                page.snack_bar.open = True
+                page.update()
+                page.go("/election")
+            else:
+                page.snack_bar = ft.SnackBar(content=ft.Text(message), action="OK")
+                page.snack_bar.open = True
+                page.update()
 
     return ft.Card(
         content=ft.Container(

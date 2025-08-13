@@ -16,6 +16,7 @@ import json
 from datetime import datetime as dt, UTC
 from app.blockchain.algorand import send_algorand_txn, sign_algorand_txn, create_algorand_txn, algod_client
 from algosdk.error import AlgodHTTPError
+from app.core.config import settings
 
 
 class VoteService:
@@ -71,23 +72,24 @@ class VoteService:
             )
 
 
-            try:
-                sender_mnemonic = user.algorand_mnemonic
-                
-                # Goes to a government account
-                # algo_txn = create_algorand_txn(user.algorand_address, 'QRFW3WKHHOVO6I2VJXMJKQXQTHBXLION3EKAGQF4CWKUKDF4CZMVDLMG5Q')
-                
-                # Goes to candidate account (still testing)
-                algo_txn = create_algorand_txn(user.algorand_address, candidate.algorand_address)
-                
-                signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
-            except AlgodHTTPError as e:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"AlgodHTTPError: {str(e)}"
-            )
+            if settings.BLOCKCHAIN_ENABLED:
+                try:
+                    sender_mnemonic = user.algorand_mnemonic
+                    
+                    # Goes to a government account
+                    # algo_txn = create_algorand_txn(user.algorand_address, 'QRFW3WKHHOVO6I2VJXMJKQXQTHBXLION3EKAGQF4CWKUKDF4CZMVDLMG5Q')
+                    
+                    # Goes to candidate account (still testing)
+                    algo_txn = create_algorand_txn(user.algorand_address, candidate.algorand_address)
+                    
+                    signed_txn = sign_algorand_txn(algo_txn, sender_mnemonic)
+                except AlgodHTTPError as e:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"AlgodHTTPError: {str(e)}"
+                )
 
-            txid = send_algorand_txn(signed_txn)
+                txid = send_algorand_txn(signed_txn)
 
             # Create vote
             vote = VoteModel(

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7    # 7 days
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
     PROJECT_NAME: str = "SECUVOTE"
+    BLOCKCHAIN_ENABLED: bool = config("BLOCKCHAIN_ENABLED", cast=bool, default=True) # True if blockchain is enabled, False if not
 
     # Database
     MONGO_CONNECTION_STRING: str = config("MONGO_CONNECTION_STRING", cast=str)

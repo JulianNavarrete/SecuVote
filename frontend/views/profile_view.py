@@ -44,7 +44,9 @@ def build(page: ft.Page, state: AppState, api: ApiClient) -> ft.View:
 
 
 def _snack(page: ft.Page, msg: str) -> None:
-    page.show_snack_bar(ft.SnackBar(content=ft.Text(msg), action="OK"))
+    page.snack_bar = ft.SnackBar(content=ft.Text(msg), action="OK")
+    page.snack_bar.open = True
+    page.update()
 
 
 def _error_view(msg: str) -> ft.View:
