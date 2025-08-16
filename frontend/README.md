@@ -1,7 +1,7 @@
 SecuVote Frontend (Streamlit)
 
 Environment variables:
-- `SECUVOTE_API`: Base URL for the FastAPI API, e.g: http://localhost:8000/api/v1
+- `SECUVOTE_API`: Base URL for the FastAPI API, e.g: http://localhost:8001/api/v1
 
 Quick installation (Windows):
 1. Run `frontend/windows-install.ps1`

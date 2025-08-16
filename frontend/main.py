@@ -4,8 +4,6 @@ import streamlit as st
 # Basic configuration
 st.set_page_config(page_title="SecuVote", page_icon="🗳️", layout="centered")
 
-# (Hidden) The app can read SECUVOTE_API without showing it in UI
-
 # Simple router
 pages = {
 	"views/login_view.py": "Login",
@@ -26,7 +24,6 @@ def switch_page(page_path: str):
 	st.rerun()
 
 
-# Navigation API for other views
 st.switch_page = switch_page  # type: ignore
 
 
