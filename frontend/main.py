@@ -18,9 +18,9 @@ def main(page: ft.Page):
 
     page.title = "SecuVote"
     page.theme_mode = ft.ThemeMode.LIGHT
-    page.window_width = 400
-    page.window_height = 800
-    page.window_resizable = False
+    page.window.width = 400
+    page.window.height = 800
+    page.window.resizable = False
     page.padding = 20
 
     builders: dict[str, Callable[[], ft.View]] = {
