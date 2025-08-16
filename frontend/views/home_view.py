@@ -1,91 +1,46 @@
-import flet as ft
-
-from app_state import AppState
-from services.api_client import ApiClient
+import streamlit as st
+from app_state import get_client, get_auth
 
 
-def build(page: ft.Page, state: AppState, api: ApiClient) -> ft.View:
-    elections_list = ft.ListView(expand=True, spacing=10, padding=20)
+def render():
+	auth = get_auth()
+	st.title("Inicio")
 
-    def load():
-        elections_list.controls.clear()
-        ok, data = api.list_elections()
-        if not ok:
-            elections_list.controls.append(_error_card(str(data)))
-        else:
-            for election in data:
-                elections_list.controls.append(_election_card(page, state, election))
-        page.update()
+	if not auth.access_token:
+		st.info("Debes iniciar sesión")
+		if st.button("Ir al login"):
+			st.switch_page("views/login_view.py")
+		return
 
-    app_bar = ft.AppBar(
-        title=ft.Text("Elecciones disponibles"),
-        actions=[
-            ft.IconButton(icon=ft.Icons.PERSON, on_click=lambda e: page.go("/profile")),
-            ft.IconButton(icon=ft.Icons.LOGOUT, on_click=lambda e: _logout(page, state)),
-        ],
-    )
+	user = auth.user
+	with st.sidebar:
+		st.subheader("Usuario")
+		if user:
+			st.write(f"{user.get('email')} (DNI {user.get('dni')})")
+			if st.button("Modificar usuario"):
+				st.switch_page("views/profile_view.py")
+		if st.button("Cerrar sesión"):
+			auth.access_token = None
+			auth.refresh_token = None
+			auth.user = None
+			st.switch_page("views/login_view.py")
 
-    view = ft.View(
-        "/home",
-        [
-            app_bar,
-            ft.Container(
-                content=ft.Column(
-                    [
-                        ft.Text("Bienvenido a SecuVote", size=22, weight=ft.FontWeight.BOLD),
-                        ft.Text("Selecciona una elección para ver detalles"),
-                        elections_list,
-                    ]
-                ),
-                padding=20,
-            ),
-        ],
-    )
-
-    load()
-    return view
-
-
-def _logout(page: ft.Page, state: AppState) -> None:
-    state.set_token(None)
-    state.set_user(None)
-    state.set_election(None)
-    page.go("/login")
-
-
-def _election_card(page: ft.Page, state: AppState, election: dict) -> ft.Card:
-    return ft.Card(
-        content=ft.Container(
-            content=ft.Column(
-                [
-                    ft.ListTile(
-                        leading=ft.Icon(ft.Icons.HOW_TO_VOTE),
-                        title=ft.Text(election.get("name", ""), weight=ft.FontWeight.BOLD),
-                        subtitle=ft.Text(election.get("description", "")),
-                    ),
-                    ft.Row(
-                        [
-                            ft.TextButton(
-                                text="Ver detalles",
-                                on_click=lambda e, el=election: _go_election(page, state, el),
-                            )
-                        ],
-                        alignment=ft.MainAxisAlignment.END,
-                    ),
-                ]
-            ),
-            padding=10,
-        )
-    )
-
-
-def _go_election(page: ft.Page, state: AppState, election: dict) -> None:
-    state.set_election(election)
-    page.go("/election")
-
-
-def _error_card(msg: str) -> ft.Card:
-    return ft.Card(content=ft.Container(content=ft.Text(msg), padding=10))
-
+	st.subheader("Elecciones disponibles")
+	try:
+		client = get_client()
+		elections = client.list_elections()
+		for e in elections:
+			with st.container(border=True):
+				st.write(f"{e['name']}")
+				st.caption(e.get("description", ""))
+				col1, col2 = st.columns([1,1])
+				with col1:
+					if st.button("Ver", key=f"view_{e['id']}"):
+						st.session_state["current_election"] = e
+						st.switch_page("views/election_view.py")
+				with col2:
+					st.write("")
+	except Exception as ex:
+		st.error(f"Error al cargar elecciones: {ex}")
 
 

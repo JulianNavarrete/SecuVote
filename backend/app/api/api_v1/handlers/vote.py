@@ -11,6 +11,15 @@ from app.api.deps.user_deps import get_current_user
 vote_router = APIRouter()
 
 
+@vote_router.get("/has-voted", summary="Check if current user has voted in election")
+async def has_voted(election_id: str, current_user: UserModel = Depends(get_current_user)):
+    try:
+        from app.services.vote_service import VoteService
+        voted = await VoteService.has_user_voted(current_user.dni, election_id)
+        return {"has_voted": voted}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @vote_router.post("/create-vote", summary="Create a new vote", response_model=VoteOut)
 async def create_vote(
     candidate_id: str,

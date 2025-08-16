@@ -1,69 +1,35 @@
-import flet as ft
-
-from app_state import AppState
-from services.api_client import ApiClient
+import streamlit as st
+from app_state import get_client, get_auth, set_tokens
 
 
-def build(page: ft.Page, state: AppState, api: ApiClient) -> ft.View:
-    dni_field = ft.TextField(label="DNI", hint_text="Ingresa tu DNI", width=300, keyboard_type=ft.KeyboardType.NUMBER)
-    password_field = ft.TextField(label="Contraseña", hint_text="Ingresa tu contraseña", password=True, width=300)
+def render():
+	st.title("Iniciar sesión")
 
-    def on_login(_: ft.ControlEvent) -> None:
-        if not dni_field.value or not password_field.value:
-            _snack(page, "Completa todos los campos")
-            return
-        ok, data = api.login(dni_field.value, password_field.value)
-        if ok:
-            token = data.get("access_token")
-            state.set_token(token)
-            ok_me, me = api.me(token) if token else (False, None)
-            if ok_me:
-                state.set_user(me)
-                page.go("/home")
-            else:
-                _snack(page, str(me))
-        else:
-            _snack(page, str(data))
+	with st.form("login_form", clear_on_submit=False):
+		dni = st.text_input("DNI", value="")
+		password = st.text_input("Contraseña", type="password")
+		col1, col2 = st.columns([1,1])
+		with col1:
+			submitted = st.form_submit_button("Ingresar")
+		with col2:
+			st.link_button("¿Olvidaste tu contraseña?", "#", help="Placeholder, aún no implementado")
 
-    def on_forgot(_: ft.ControlEvent) -> None:
-        _snack(page, "Recuperación no implementada aún")
+	if submitted:
+		try:
+			client = get_client()
+			tokens = client.login(dni=dni, password=password)
+			set_tokens(tokens.get("access_token"), tokens.get("refresh_token"))
+			# save active user
+			user = client.me()
+			get_auth().user = user
+			st.session_state["user"] = user
+			st.success("Sesión iniciada")
+			st.switch_page("views/home_view.py")
+		except Exception as e:
+			st.error(f"No se pudo iniciar sesión: {e}")
 
-    login_button = ft.ElevatedButton(text="Iniciar sesión", width=300, on_click=on_login)
-    signup_button = ft.TextButton(text="¿No tienes cuenta? Regístrate", on_click=lambda e: page.go("/signup"))
-    forgot_button = ft.TextButton(text="¿Olvidaste tu contraseña?", on_click=on_forgot)
-
-    return ft.View(
-        "/login",
-        [
-            ft.Container(
-                content=ft.Column(
-                    [
-                        ft.Text("SecuVote", size=32, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
-                        ft.Text("Sistema de Votación", size=16, text_align=ft.TextAlign.CENTER),
-                        ft.Divider(),
-                        ft.Container(height=20),
-                        dni_field,
-                        ft.Container(height=10),
-                        password_field,
-                        ft.Container(height=20),
-                        login_button,
-                        ft.Container(height=10),
-                        signup_button,
-                        forgot_button,
-                    ],
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                ),
-                alignment=ft.alignment.center,
-            )
-        ],
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-    )
-
-
-def _snack(page: ft.Page, msg: str) -> None:
-    page.snack_bar = ft.SnackBar(content=ft.Text(msg), action="OK")
-    page.snack_bar.open = True
-    page.update()
-
+	st.caption("¿No tienes cuenta?")
+	if st.button("Crear cuenta"):
+		st.switch_page("views/signup_view.py")
 
 

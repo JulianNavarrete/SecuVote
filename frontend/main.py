@@ -1,50 +1,43 @@
-import flet as ft
+import os
+import streamlit as st
 
-from typing import Callable
+# Basic configuration
+st.set_page_config(page_title="SecuVote", page_icon="🗳️", layout="centered")
 
-from views.login_view import build as build_login
-from views.signup_view import build as build_signup
-from views.home_view import build as build_home
-from views.election_view import build as build_election
-from views.vote_view import build as build_vote
-from views.profile_view import build as build_profile
-from services.api_client import ApiClient
-from app_state import AppState
+# (Hidden) The app can read SECUVOTE_API without showing it in UI
 
+# Simple router
+pages = {
+	"views/login_view.py": "Login",
+	"views/signup_view.py": "Registro",
+	"views/home_view.py": "Inicio",
+	"views/election_view.py": "Elección",
+	"views/vote_view.py": "Votar",
+	"views/profile_view.py": "Perfil",
+}
 
-def main(page: ft.Page):
-    state = AppState()
-    api = ApiClient()
-
-    page.title = "SecuVote"
-    page.theme_mode = ft.ThemeMode.LIGHT
-    page.window.width = 400
-    page.window.height = 800
-    page.window.resizable = False
-    page.padding = 20
-
-    builders: dict[str, Callable[[], ft.View]] = {
-        "/login": lambda: build_login(page, state, api),
-        "/signup": lambda: build_signup(page, state, api),
-        "/home": lambda: build_home(page, state, api),
-        "/election": lambda: build_election(page, state, api),
-        "/vote": lambda: build_vote(page, state, api),
-        "/profile": lambda: build_profile(page, state, api),
-    }
-
-    def handle_route_change(e: ft.RouteChangeEvent):
-        route = e.route
-        page.views.clear()
-        build = builders.get(route, builders["/login"])  # vista por defecto
-        page.views.append(build())
-        page.update()
-
-    page.on_route_change = handle_route_change
-    page.go("/login")
+# Load initial view
+if "_page" not in st.session_state:
+	st.session_state["_page"] = "views/login_view.py"
 
 
-if __name__ == "__main__":
-    ft.app(target=main)
+def switch_page(page_path: str):
+	st.session_state["_page"] = page_path
+	st.rerun()
 
+
+# Navigation API for other views
+st.switch_page = switch_page  # type: ignore
+
+
+def _render_current_page():
+	current = st.session_state.get("_page", "views/login_view.py")
+	# Dynamic import
+	module_name = current.replace("/", ".").replace(".py", "")
+	module = __import__(module_name, fromlist=["render"])
+	module.render()
+
+
+_render_current_page()
 
 

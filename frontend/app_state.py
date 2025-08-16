@@ -1,25 +1,33 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Optional, Dict, Any
+import streamlit as st
+from services.api_client import ApiClient
 
 
 @dataclass
-class AppState:
+class AuthState:
+	access_token: Optional[str] = None
+	refresh_token: Optional[str] = None
+	user: Optional[Dict[str, Any]] = None
 
-    api_base_url: str = "http://localhost:8000/api/v1"
-    access_token: Optional[str] = None
-    current_user: Optional[Dict[str, Any]] = None
-    current_election: Optional[Dict[str, Any]] = None
 
-    def set_token(self, token: Optional[str]) -> None:
-        self.access_token = token
+def get_client() -> ApiClient:
+	if "api_client" not in st.session_state:
+		st.session_state["api_client"] = ApiClient()
+	return st.session_state["api_client"]
 
-    def set_user(self, user: Optional[Dict[str, Any]]) -> None:
-        self.current_user = user
 
-    def set_election(self, election: Optional[Dict[str, Any]]) -> None:
-        self.current_election = election
+def get_auth() -> AuthState:
+	if "auth" not in st.session_state:
+		st.session_state["auth"] = AuthState()
+	return st.session_state["auth"]
 
+
+def set_tokens(access: Optional[str], refresh: Optional[str]):
+	auth = get_auth()
+	auth.access_token = access
+	auth.refresh_token = refresh
+	client = get_client()
+	client.set_token(access)
 
 

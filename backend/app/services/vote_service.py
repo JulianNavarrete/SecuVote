@@ -21,12 +21,17 @@ from app.core.config import settings
 
 class VoteService:
     @staticmethod
+    async def has_user_voted(dni: int, election_id: str) -> bool:
+        existing_vote = await VoteModel.find_one(
+            VoteModel.voter.dni == dni,
+            VoteModel.election.id == election_id
+        )
+        return existing_vote is not None
+
+    @staticmethod
     async def create_vote(dni: int, candidate_id: str, election_id: str) -> VoteOut:
         try:
-            existing_vote = await VoteModel.find_one(
-                VoteModel.voter.dni == dni,
-                VoteModel.election.id == election_id
-            )
+            existing_vote = await VoteService.has_user_voted(dni, election_id)
 
             if existing_vote:
                 raise HTTPException(status_code=400, detail="User has already voted in this election")

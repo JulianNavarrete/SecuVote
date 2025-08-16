@@ -1,64 +1,25 @@
-import flet as ft
-
-from app_state import AppState
-from services.api_client import ApiClient
+import streamlit as st
+from app_state import get_client
 
 
-def build(page: ft.Page, state: AppState, api: ApiClient) -> ft.View:
-    email_field = ft.TextField(label="Email", hint_text="Ingresa tu email", width=300, keyboard_type=ft.KeyboardType.EMAIL)
-    dni_field = ft.TextField(label="DNI", hint_text="Ingresa tu DNI", width=300, keyboard_type=ft.KeyboardType.NUMBER)
-    password_field = ft.TextField(label="Contraseña", password=True, width=300)
-    confirm_field = ft.TextField(label="Confirmar contraseña", password=True, width=300)
+def render():
+	st.title("Crear cuenta")
+	with st.form("signup_form", clear_on_submit=False):
+		email = st.text_input("Email")
+		dni = st.number_input("DNI", min_value=0, format="%d")
+		password = st.text_input("Contraseña", type="password")
+		submitted = st.form_submit_button("Registrarme")
 
-    def on_signup(_: ft.ControlEvent) -> None:
-        if not all([email_field.value, dni_field.value, password_field.value, confirm_field.value]):
-            _snack(page, "Completa todos los campos")
-            return
-        if password_field.value != confirm_field.value:
-            _snack(page, "Las contraseñas no coinciden")
-            return
-        try:
-            dni_int = int(dni_field.value)
-        except ValueError:
-            _snack(page, "DNI inválido")
-            return
+	if submitted:
+		try:
+			client = get_client()
+			client.signup(email=email, dni=int(dni), password=password)
+			st.success("Usuario creado. Ahora inicia sesión.")
+			st.switch_page("views/login_view.py")
+		except Exception as e:
+			st.error(f"No se pudo registrar: {e}")
 
-        ok, data = api.signup(email_field.value, dni_int, password_field.value)
-        if ok:
-            _snack(page, "Usuario registrado. Inicia sesión")
-            page.go("/login")
-        else:
-            _snack(page, str(data))
-
-    return ft.View(
-        "/signup",
-        [
-            ft.Container(
-                content=ft.Column(
-                    [
-                        ft.Text("Registro", size=28, weight=ft.FontWeight.BOLD),
-                        ft.Divider(),
-                        email_field,
-                        dni_field,
-                        password_field,
-                        confirm_field,
-                        ft.Container(height=10),
-                        ft.ElevatedButton(text="Registrarse", width=300, on_click=on_signup),
-                        ft.TextButton(text="Volver al login", on_click=lambda e: page.go("/login")),
-                    ],
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                ),
-                alignment=ft.alignment.center,
-            )
-        ],
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-    )
-
-
-def _snack(page: ft.Page, msg: str) -> None:
-    page.snack_bar = ft.SnackBar(content=ft.Text(msg), action="OK")
-    page.snack_bar.open = True
-    page.update()
-
+	if st.button("Volver al login"):
+		st.switch_page("views/login_view.py")
 
 

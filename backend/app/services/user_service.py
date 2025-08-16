@@ -85,8 +85,10 @@ class UserService:
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
             
-            update_data = {k: v for k, v in data if v is not None}
-            await user.update({"$set": update_data})
+            update_data = data.model_dump(exclude_unset=True, exclude_none=True)
+            for key, value in update_data.items():
+                setattr(user, key, value)
+            await user.save()
             return user
         except DuplicateKeyError:
             raise HTTPException(status_code=400, detail="Email already in use")
