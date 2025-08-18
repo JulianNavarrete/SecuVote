@@ -70,6 +70,7 @@ async def delete_candidate(id: str):
             detail="Candidate does not exist"
         )
 
+'''
 @candidate_router.post("/add-election-to-candidate/{candidate_id}/{election_id}", summary="Add Election to Candidate", response_model=CandidateOut)
 async def add_election_to_candidate(candidate_id: str, election_id: str):
     try:
@@ -100,3 +101,4 @@ async def remove_election_from_candidate(candidate_id: str, election_id: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while removing the election from the candidate"
         )
+'''
