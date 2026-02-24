@@ -1,5 +1,28 @@
 import streamlit as st
 from app_state import get_client
+from datetime import datetime, timezone
+
+
+def _election_open_status(election):
+	# check if the election is open or closed. if start_date is None and end_date is None, the election is open.
+	start = election.get("start_date")
+	end = election.get("end_date")
+	if start is None and end is None:
+		return True, None
+	now = datetime.now(timezone.utc)
+	if isinstance(start, str):
+		start = datetime.fromisoformat(start.replace("Z", "+00:00"))
+	if isinstance(end, str):
+		end = datetime.fromisoformat(end.replace("Z", "+00:00"))
+	if start is not None and getattr(start, "tzinfo", None) is None:
+		start = start.replace(tzinfo=timezone.utc)
+	if end is not None and getattr(end, "tzinfo", None) is None:
+		end = end.replace(tzinfo=timezone.utc)
+	if start is not None and now < start:
+		return False, "not_open"
+	if end is not None and now > end:
+		return False, "closed"
+	return True, None
 
 
 def render():
@@ -8,6 +31,8 @@ def render():
 		st.warning("No hay elección seleccionada")
 		st.switch_page("views/home_view.py")
 		return
+
+	is_open, reason = _election_open_status(election)
 
 	st.title(election["name"])
 	st.caption(election.get("description", ""))
@@ -44,8 +69,13 @@ def render():
 			if c.get("bio"):
 				st.caption(c["bio"])
 
-	# button to go to vote (only if not already voted)
-	if (not already_voted) and st.button("Votar"):
+	# button to vote only if the election is open and the user has not voted
+	if not is_open:
+		if reason == "not_open":
+			st.warning("Esta elección aún no está abierta para votar.")
+		else:
+			st.warning("Esta elección ya cerró; no se pueden registrar más votos.")
+	elif not already_voted and st.button("Votar"):
 		st.session_state["vote_candidates"] = candidates
 		st.switch_page("views/vote_view.py")
 

@@ -51,11 +51,27 @@ class VoteService:
                 algorand_private_key=user.algorand_private_key
             )
             
-            object_id = ObjectId(election_id)            
+            object_id = ObjectId(election_id)
             election = await ElectionModel.find_one(ElectionModel.id == object_id)
             if not election:
                 raise HTTPException(status_code=404, detail="Election not found")
-            
+
+            now = dt.now(UTC)
+            if election.start_date is not None:
+                start = election.start_date if election.start_date.tzinfo else election.start_date.replace(tzinfo=UTC)
+                if now < start:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Election has not opened yet",
+                    )
+            if election.end_date is not None:
+                end = election.end_date if election.end_date.tzinfo else election.end_date.replace(tzinfo=UTC)
+                if now > end:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Election has already closed",
+                    )
+
             election = ElectionOutVote(
                 id=election_id,
                 name=election.name,
