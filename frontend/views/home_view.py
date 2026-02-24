@@ -33,13 +33,9 @@ def render():
 			with st.container(border=True):
 				st.write(f"{e['name']}")
 				st.caption(e.get("description", ""))
-				col1, col2 = st.columns([1,1])
-				with col1:
-					if st.button("Ver", key=f"view_{e['id']}"):
-						st.session_state["current_election"] = e
-						st.switch_page("views/election_view.py")
-				with col2:
-					st.write("")
+				if st.button("Ver", key=f"view_{e['id']}"):
+					st.session_state["current_election"] = e
+					st.switch_page("views/election_view.py")
 	except Exception as ex:
 		st.error(f"Error al cargar elecciones: {ex}")
 

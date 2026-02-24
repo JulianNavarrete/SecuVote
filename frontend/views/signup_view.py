@@ -6,7 +6,7 @@ def render():
 	st.title("Crear cuenta")
 	with st.form("signup_form", clear_on_submit=False):
 		email = st.text_input("Email")
-		dni = st.number_input("DNI", min_value=0, format="%d")
+		dni = st.text_input("DNI", value="")
 		password = st.text_input("Contraseña", type="password")
 		submitted = st.form_submit_button("Registrarme")
 
