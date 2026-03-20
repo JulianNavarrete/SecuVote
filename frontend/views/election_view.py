@@ -8,7 +8,7 @@ def _election_open_status(election):
 	start = election.get("start_date")
 	end = election.get("end_date")
 	if start is None and end is None:
-		return True, None
+		return True, None, None
 	now = datetime.now(timezone.utc)
 	if isinstance(start, str):
 		start = datetime.fromisoformat(start.replace("Z", "+00:00"))
@@ -19,10 +19,10 @@ def _election_open_status(election):
 	if end is not None and getattr(end, "tzinfo", None) is None:
 		end = end.replace(tzinfo=timezone.utc)
 	if start is not None and now < start:
-		return False, "not_open"
+		return False, "not_open", start
 	if end is not None and now > end:
-		return False, "closed"
-	return True, None
+		return False, "closed", end
+	return True, None, None
 
 
 def render():
@@ -32,7 +32,7 @@ def render():
 		st.switch_page("views/home_view.py")
 		return
 
-	is_open, reason = _election_open_status(election)
+	is_open, reason, event_time = _election_open_status(election)
 
 	st.title(election["name"])
 	st.caption(election.get("description", ""))
@@ -41,6 +41,11 @@ def render():
 	client = get_client()
 	try:
 		candidates = client.election_candidates(election["id"])
+		# Orden alfabético A-Z por nombre del candidato.
+		candidates = sorted(
+			candidates,
+			key=lambda c: str(c.get("name") or "").lower()
+		)
 		# local vote count for each candidate (if votes are available)
 		vote_counts = {}
 		try:
@@ -72,9 +77,19 @@ def render():
 	# button to vote only if the election is open and the user has not voted
 	if not is_open:
 		if reason == "not_open":
-			st.warning("Esta elección aún no está abierta para votar.")
+			if event_time is not None:
+				# Muestra fecha y hora con minutos solamente (en UTC).
+				open_str = event_time.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M")
+				st.warning(f"Esta elección aún no está abierta para votar. Abre el {open_str}.")
+			else:
+				st.warning("Esta elección aún no está abierta para votar.")
 		else:
-			st.warning("Esta elección ya cerró; no se pueden registrar más votos.")
+			if event_time is not None:
+				# Muestra fecha y hora con minutos solamente (en UTC).
+				close_str = event_time.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%M")
+				st.warning(f"Esta elección ya finalizó; fue el {close_str}.")
+			else:
+				st.warning("Esta elección ya finalizó.")
 	elif not already_voted and st.button("Votar"):
 		st.session_state["vote_candidates"] = candidates
 		st.switch_page("views/vote_view.py")
