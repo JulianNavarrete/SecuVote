@@ -25,6 +25,15 @@ def _election_open_status(election):
 	return True, None
 
 
+def _candidate_vote_label(candidate):
+	"""Texto mostrado al votar: nombre - biografía."""
+	name = (candidate.get("name") or "").strip()
+	bio = (candidate.get("bio") or "").strip()
+	if bio:
+		return f"{name} - {bio}"
+	return name
+
+
 def render():
 	auth = get_auth()
 	if not auth.access_token:
@@ -50,7 +59,15 @@ def render():
 		return
 
 	st.title(f"Votar en {election['name']}")
-	options = {c["name"]: c["id"] for c in candidates}
+	options = {}
+	seen = {}
+	for c in candidates:
+		label = _candidate_vote_label(c)
+		n = seen.get(label, 0)
+		seen[label] = n + 1
+		if n:
+			label = f"{label} ({n + 1})"
+		options[label] = c["id"]
 	choice = st.radio("Selecciona tu candidato", list(options.keys()))
 
 	if st.button("Confirmar voto"):
@@ -81,5 +98,6 @@ def render():
 
 	if st.button("Cancelar"):
 		st.switch_page("views/election_view.py")
+
 
 

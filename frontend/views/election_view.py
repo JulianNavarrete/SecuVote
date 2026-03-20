@@ -64,10 +64,10 @@ def render():
 	for c in candidates:
 		with st.container(border=True):
 			count = vote_counts.get(c["id"], 0)
-			st.write(f"{c['name']} - {c.get('party','')}")
-			st.caption(f"Votos: {count}")
+			st.write(c["name"])
 			if c.get("bio"):
 				st.caption(c["bio"])
+			st.caption(f"Votos: {count}")
 
 	# button to vote only if the election is open and the user has not voted
 	if not is_open:
